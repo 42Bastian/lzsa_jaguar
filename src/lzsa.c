@@ -46,8 +46,9 @@
 #define OPT_FAVOR_RATIO    4
 #define OPT_RAW_BACKWARD   8
 #define OPT_STATS          16
+#define OPT_POS_OFFSET     32
 
-#define TOOL_VERSION "1.3.12"
+#define TOOL_VERSION "1.3.12-42BS"
 
 /*---------------------------------------------------------------------------*/
 
@@ -97,6 +98,8 @@ static void compression_progress(long long nOriginalSize, long long nCompressedS
       fflush(stdout);
    }
 }
+/* 42BS global for the time beeing */
+int positiveOffset = 0;
 
 static int do_compress(const char *pszInFilename, const char *pszOutFilename, const char *pszDictionaryFilename, const unsigned int nOptions, const int nMinMatchSize, const int nFormatVersion) {
    long long nStartTime = 0LL, nEndTime = 0LL;
@@ -117,7 +120,11 @@ static int do_compress(const char *pszInFilename, const char *pszOutFilename, co
    if (nOptions & OPT_VERBOSE) {
       nStartTime = do_get_time();
    }
-
+   if ( nOptions & OPT_POS_OFFSET ){
+     positiveOffset = 1;
+   } else {
+     positiveOffset = 0;
+   }
    nStatus = lzsa_compress_file(pszInFilename, pszOutFilename, pszDictionaryFilename, nFlags, nMinMatchSize, nFormatVersion, compression_progress, &nOriginalSize, &nCompressedSize, &nCommandCount, &nSafeDist, &stats);
 
    if ((nOptions & OPT_VERBOSE)) {
@@ -242,7 +249,7 @@ void comparestream_close(lzsa_stream_t *stream) {
          free(pCompareStream->pCompareDataBuf);
          pCompareStream->pCompareDataBuf = NULL;
       }
-      
+
       fclose(pCompareStream->f);
       free(pCompareStream);
 
@@ -388,7 +395,7 @@ static void generate_compressible_data(unsigned char *pBuffer, size_t nBufferSiz
    int nMatchProbability = (int)(fMatchProbability * 1023.0f);
 
    srand(nSeed);
-   
+
    if (nIndex >= nBufferSize) return;
    pBuffer[nIndex++] = rand() % nNumLiteralValues;
 
@@ -1037,11 +1044,14 @@ int main(int argc, char **argv) {
             nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-stats")) {
-      if ((nOptions & OPT_STATS) == 0) {
-         nOptions |= OPT_STATS;
+        if ((nOptions & OPT_STATS) == 0) {
+          nOptions |= OPT_STATS;
+        }
+        else
+          nArgsError = 1;
       }
-      else
-         nArgsError = 1;
+      else if (!strcmp(argv[i], "-p")) {
+        nOptions |= OPT_POS_OFFSET;
       }
       else {
          if (!pszInFilename)
@@ -1081,6 +1091,7 @@ int main(int argc, char **argv) {
       fprintf(stderr, "       -m <value>: minimum match size (3-5) (default: 3)\n");
       fprintf(stderr, "       --prefer-ratio: favor compression ratio (default)\n");
       fprintf(stderr, "       --prefer-speed: favor decompression speed (same as -m3)\n");
+      fprintf(stderr, "       -p: positive offset\n");
       return 100;
    }
 

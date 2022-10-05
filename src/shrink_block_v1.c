@@ -36,6 +36,8 @@
 #include "shrink_block_v1.h"
 #include "format.h"
 
+extern const int positiveOffset;
+
 /**
  * Get the number of extra bits required to represent a literals length
  *
@@ -509,10 +511,16 @@ static int lzsa_write_block_v1(lzsa_compressor *pCompressor, lzsa_match *pBestMa
             nOutOffset += nNumLiterals;
             nNumLiterals = 0;
          }
-
-         pOutData[nOutOffset++] = (-nMatchOffset) & 0xff;
-         if (nTokenLongOffset) {
-            pOutData[nOutOffset++] = (-nMatchOffset) >> 8;
+         if ( positiveOffset != 0 ){
+           pOutData[nOutOffset++] = nMatchOffset & 0xff;
+           if (nTokenLongOffset) {
+             pOutData[nOutOffset++] = nMatchOffset >> 8;
+           }
+         } else {
+           pOutData[nOutOffset++] = (-nMatchOffset) & 0xff;
+           if (nTokenLongOffset) {
+             pOutData[nOutOffset++] = (-nMatchOffset) >> 8;
+           }
          }
          nOutOffset = lzsa_write_match_varlen_v1(pOutData, nOutOffset, nEncodedMatchLen);
 
@@ -637,7 +645,7 @@ static int lzsa_write_raw_uncompressed_block_v1(lzsa_compressor *pCompressor, co
 
    pCompressor->num_commands = 0;
    pOutData[nOutOffset++] = (nTokenLiteralsLen << 4) | 0x0f;
-   
+
    nOutOffset = lzsa_write_literals_varlen_v1(pOutData, nOutOffset, nNumLiterals);
 
    if (nNumLiterals != 0) {
@@ -694,7 +702,7 @@ int lzsa_optimize_and_write_block_v1(lzsa_compressor *pCompressor, const unsigne
       /* Compress optimally and do break ties in favor of less tokens */
       memset(pCompressor->improved_match, 0, BLOCK_SIZE * sizeof(lzsa_match));
       lzsa_optimize_forward_v1(pCompressor, pCompressor->improved_match - nPreviousBlockSize, nPreviousBlockSize, nPreviousBlockSize + nInDataSize, 1 /* reduce */);
-      
+
       nPasses = 0;
       do {
          nDidReduce = lzsa_optimize_command_count_v1(pCompressor, pInWindow, pCompressor->improved_match - nPreviousBlockSize, nPreviousBlockSize, nPreviousBlockSize + nInDataSize);
