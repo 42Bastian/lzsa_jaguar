@@ -64,10 +64,10 @@ int lzsa_get_frame_size(void) {
  * @return number of encoded bytes, or -1 for failure
  */
 int lzsa_encode_header(unsigned char *pFrameData, const int nMaxFrameDataSize, int nFormatVersion) {
-   if (nMaxFrameDataSize >= 3 && (nFormatVersion == 1 || nFormatVersion == 2)) {
+   if (nMaxFrameDataSize >= 3 && (nFormatVersion == 1 || nFormatVersion == 2 || nFormatVersion == 3)) {
       pFrameData[0] = LZSA_ID_0;                         /* Magic number */
       pFrameData[1] = LZSA_ID_1;
-      pFrameData[2] = (nFormatVersion == 2) ? 0x20 : 0;  /* Format version 1 */
+      pFrameData[2] = (nFormatVersion == 2) ? 0x20 : (nFormatVersion == 1) ? 0 : 0x40;  /* Format version 1 */
 
       return 3;
    }
@@ -150,15 +150,16 @@ int lzsa_encode_footer_frame(unsigned char *pFrameData, const int nMaxFrameDataS
  * @return 0 for success, or -1 for failure
  */
 int lzsa_decode_header(const unsigned char *pFrameData, const int nFrameDataSize, int *nFormatVersion) {
+  int version = pFrameData[2] & 0xe0;
    if (nFrameDataSize != 3 ||
       pFrameData[0] != LZSA_ID_0 ||
       pFrameData[1] != LZSA_ID_1 ||
       (pFrameData[2] & 0x1f) != 0 ||
-      ((pFrameData[2] & 0xe0) != 0x00 && (pFrameData[2] & 0xe0) != 0x20)) {
+       (version != 0x00 && version != 0x20 && version != 0x40) ){
       return -1;
    }
    else {
-      *nFormatVersion = (pFrameData[2] & 0xe0) ? 2 : 1;
+     *nFormatVersion = (version == 0x20) ? 2 : (version == 0x40) ? 3 : 1;
       return 0;
    }
 }

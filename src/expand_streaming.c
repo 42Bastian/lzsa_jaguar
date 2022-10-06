@@ -233,4 +233,3 @@ lzsa_status_t lzsa_decompress_stream(lzsa_stream_t *pInStream, lzsa_stream_t *pO
    *pCompressedSize = nCompressedSize;
    return nDecompressionError;
 }
-

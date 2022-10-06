@@ -90,7 +90,7 @@ int lzsa_build_suffix_array(lzsa_compressor *pCompressor, const unsigned char *p
    intervals[0] &= POS_MASK;
    int nMinMatchSize = pCompressor->min_match_size;
 
-   if (pCompressor->format_version >= 2) {
+   if (pCompressor->format_version == 2) {
       for (i = 1; i < nInWindowSize; i++) {
          int nIndex = (int)(intervals[i] & POS_MASK);
          int nLen = PLCP[nIndex];
@@ -238,7 +238,7 @@ static int lzsa_find_matches_at(lzsa_compressor *pCompressor, const int nOffset,
    match_pos = super_ref & EXCL_VISITED_MASK;
    matchptr = pMatches;
 
-   if (pCompressor->format_version >= 2 && nInWindowSize < 65536) {
+   if (pCompressor->format_version == 2 && nInWindowSize < 65536) {
       if ((matchptr - pMatches) < nMaxMatches) {
          int nMatchOffset = (int)(nOffset - match_pos);
 
@@ -256,7 +256,7 @@ static int lzsa_find_matches_at(lzsa_compressor *pCompressor, const int nOffset,
       if ((super_ref = pos_data[match_pos]) > ref) {
          match_pos = intervals[super_ref & POS_MASK] & EXCL_VISITED_MASK;
 
-         if (pCompressor->format_version >= 2 && nInWindowSize < 65536) {
+         if (pCompressor->format_version == 2 && nInWindowSize < 65536) {
             if ((matchptr - pMatches) < nMaxMatches) {
                int nMatchOffset = (int)(nOffset - match_pos);
 
@@ -280,7 +280,7 @@ static int lzsa_find_matches_at(lzsa_compressor *pCompressor, const int nOffset,
          int nMatchOffset = (int)(nOffset - match_pos);
 
          if (nMatchOffset <= MAX_OFFSET && nMatchOffset != nPrevOffset) {
-            if (pCompressor->format_version >= 2) {
+            if (pCompressor->format_version == 2) {
                matchptr->length = (unsigned short)(ref >> (LCP_SHIFT + TAG_BITS));
             }
             else {
@@ -296,7 +296,7 @@ static int lzsa_find_matches_at(lzsa_compressor *pCompressor, const int nOffset,
       ref = super_ref;
       match_pos = intervals[ref & POS_MASK] & EXCL_VISITED_MASK;
 
-      if (pCompressor->format_version >= 2 && nInWindowSize < 65536) {
+      if (pCompressor->format_version == 2 && nInWindowSize < 65536) {
          if ((matchptr - pMatches) < nMaxMatches) {
             int nMatchOffset = (int)(nOffset - match_pos);
 

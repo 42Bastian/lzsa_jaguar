@@ -34,6 +34,7 @@
 #include <string.h>
 #include "expand_context.h"
 #include "expand_block_v1.h"
+#include "expand_block_v1a.h"
 #include "expand_block_v2.h"
 #include "lib.h"
 
@@ -59,6 +60,8 @@ int lzsa_decompressor_expand_block(unsigned char *pInBlock, int nBlockSize, unsi
 
    if (nFormatVersion == 1)
       nDecompressedSize = lzsa_decompressor_expand_block_v1(pInBlock, nBlockSize, pOutData, nOutDataOffset, nBlockMaxSize);
+   else if (nFormatVersion == 3)
+      nDecompressedSize = lzsa_decompressor_expand_block_v1a(pInBlock, nBlockSize, pOutData, nOutDataOffset, nBlockMaxSize);
    else if (nFormatVersion == 2)
       nDecompressedSize = lzsa_decompressor_expand_block_v2(pInBlock, nBlockSize, pOutData, nOutDataOffset, nBlockMaxSize);
    else

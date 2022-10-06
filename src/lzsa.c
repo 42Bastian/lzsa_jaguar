@@ -997,7 +997,7 @@ int main(int argc, char **argv) {
          if (!nFormatVersionDefined && (i + 1) < argc) {
             char *pEnd = NULL;
             nFormatVersion = (int)strtol(argv[i + 1], &pEnd, 10);
-            if (pEnd && pEnd != argv[i + 1] && (nFormatVersion >= 1 && nFormatVersion <= 2)) {
+            if (pEnd && pEnd != argv[i + 1] && (nFormatVersion >= 1 && nFormatVersion <= 3)) {
                i++;
                nFormatVersionDefined = 1;
             }
@@ -1012,7 +1012,7 @@ int main(int argc, char **argv) {
          if (!nFormatVersionDefined) {
             char *pEnd = NULL;
             nFormatVersion = (int)strtol(argv[i] + 2, &pEnd, 10);
-            if (pEnd && pEnd != (argv[i] + 2) && (nFormatVersion >= 1 && nFormatVersion <= 2)) {
+            if (pEnd && pEnd != (argv[i] + 2) && (nFormatVersion >= 1 && nFormatVersion <= 3)) {
                nFormatVersionDefined = 1;
             }
             else {

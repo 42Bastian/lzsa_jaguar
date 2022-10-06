@@ -1,5 +1,6 @@
 CC=clang
 CFLAGS=-O3 -g -fomit-frame-pointer -Isrc/libdivsufsort/include -Isrc
+CFLAGS+= -Wno-microsoft-enum-forward-reference
 OBJDIR=obj
 LDFLAGS=
 
@@ -7,11 +8,12 @@ $(OBJDIR)/%.o: src/../%.c
 	@mkdir -p '$(@D)'
 	$(CC) $(CFLAGS) -c $< -o $@
 
-APP := lzsa
+APP := lzsa.exe
 
 OBJS += $(OBJDIR)/src/lzsa.o
 OBJS += $(OBJDIR)/src/dictionary.o
 OBJS += $(OBJDIR)/src/expand_block_v1.o
+OBJS += $(OBJDIR)/src/expand_block_v1a.o
 OBJS += $(OBJDIR)/src/expand_block_v2.o
 OBJS += $(OBJDIR)/src/expand_context.o
 OBJS += $(OBJDIR)/src/expand_inmem.o
@@ -19,6 +21,7 @@ OBJS += $(OBJDIR)/src/expand_streaming.o
 OBJS += $(OBJDIR)/src/frame.o
 OBJS += $(OBJDIR)/src/matchfinder.o
 OBJS += $(OBJDIR)/src/shrink_block_v1.o
+OBJS += $(OBJDIR)/src/shrink_block_v1a.o
 OBJS += $(OBJDIR)/src/shrink_block_v2.o
 OBJS += $(OBJDIR)/src/shrink_context.o
 OBJS += $(OBJDIR)/src/shrink_inmem.o
@@ -36,4 +39,3 @@ $(APP): $(OBJS)
 
 clean:
 	@rm -rf $(APP) $(OBJDIR)
-
