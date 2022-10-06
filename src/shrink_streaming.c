@@ -75,6 +75,8 @@ static void lzsa_delete_file(const char *pszInFilename) {
  *
  * @return LZSA_OK for success, or an error value from lzsa_status_t
  */
+#include <stdio.h>
+
 lzsa_status_t lzsa_compress_file(const char *pszInFilename, const char *pszOutFilename, const char *pszDictionaryFilename, const unsigned int nFlags, const int nMinMatchSize, const int nFormatVersion,
       void(*progress)(long long nOriginalSize, long long nCompressedSize), long long *pOriginalSize, long long *pCompressedSize, int *pCommandCount, int *pSafeDist, lzsa_stats *pStats) {
    lzsa_stream_t inStream, outStream;
@@ -173,8 +175,9 @@ lzsa_status_t lzsa_compress_stream(lzsa_stream_t *pInStream, lzsa_stream_t *pOut
 
    if ((nFlags & LZSA_FLAG_RAW_BLOCK) == 0) {
       int nHeaderSize = lzsa_encode_header(cFrameData, 16, nFormatVersion);
-      if (nHeaderSize < 0)
+      if (nHeaderSize < 0){
          nError = LZSA_ERROR_COMPRESSION;
+      }
       else {
          if (pOutStream->write(pOutStream, cFrameData, nHeaderSize) != nHeaderSize)
             nError = LZSA_ERROR_DST;

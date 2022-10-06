@@ -34,6 +34,7 @@
 #include <string.h>
 #include "shrink_context.h"
 #include "shrink_block_v1.h"
+#include "shrink_block_v1a.h"
 #include "shrink_block_v2.h"
 #include "format.h"
 #include "matchfinder.h"
@@ -51,8 +52,8 @@
  */
 int lzsa_compressor_init(lzsa_compressor *pCompressor, const int nMaxWindowSize, const int nMinMatchSize, const int nFormatVersion, const int nFlags) {
    int nResult;
-   int nMinMatchSizeForFormat = (nFormatVersion == 1) ? MIN_MATCH_SIZE_V1 : MIN_MATCH_SIZE_V2;
-   int nMaxMinMatchForFormat = (nFormatVersion == 1) ? 5 : 3;
+   int nMinMatchSizeForFormat = (nFormatVersion == 1) ? MIN_MATCH_SIZE_V1 : (nFormatVersion == 3) ? MIN_MATCH_SIZE_V1A : MIN_MATCH_SIZE_V2;
+   int nMaxMinMatchForFormat = (nFormatVersion == 1 || nFormatVersion == 3 ) ? 5 : 3;
 
    nResult = divsufsort_init(&pCompressor->divsufsort_context);
    pCompressor->intervals = NULL;
@@ -76,7 +77,7 @@ int lzsa_compressor_init(lzsa_compressor *pCompressor, const int nMaxWindowSize,
    pCompressor->flags = nFlags;
    pCompressor->safe_dist = 0;
    pCompressor->num_commands = 0;
-   
+
    memset(&pCompressor->stats, 0, sizeof(pCompressor->stats));
    pCompressor->stats.min_literals = -1;
    pCompressor->stats.min_match_len = -1;
@@ -95,7 +96,7 @@ int lzsa_compressor_init(lzsa_compressor *pCompressor, const int nMaxWindowSize,
 
             if (pCompressor->open_intervals) {
                pCompressor->arrival = (lzsa_arrival *)malloc(((BLOCK_SIZE + 1) << ARRIVALS_PER_POSITION_SHIFT_V2) * sizeof(lzsa_arrival));
-   
+
                if (pCompressor->arrival) {
                   pCompressor->best_match = (lzsa_match *)malloc(BLOCK_SIZE * sizeof(lzsa_match));
 
@@ -106,7 +107,11 @@ int lzsa_compressor_init(lzsa_compressor *pCompressor, const int nMaxWindowSize,
                         if (pCompressor->format_version == 2)
                            pCompressor->match = (lzsa_match *)malloc(BLOCK_SIZE * NMATCHES_PER_INDEX_V2 * sizeof(lzsa_match));
                         else
-                           pCompressor->match = (lzsa_match *)malloc(BLOCK_SIZE * NMATCHES_PER_INDEX_V1 * sizeof(lzsa_match));
+                          if (pCompressor->format_version == 1)
+                            pCompressor->match = (lzsa_match *)malloc(BLOCK_SIZE * NMATCHES_PER_INDEX_V1 * sizeof(lzsa_match));
+                          else
+                            pCompressor->match = (lzsa_match *)malloc(BLOCK_SIZE * NMATCHES_PER_INDEX_V1A * sizeof(lzsa_match));
+
                         if (pCompressor->match) {
                            if (pCompressor->format_version == 2) {
                               pCompressor->rep_slot_handled_mask = (char*)malloc(NARRIVALS_PER_POSITION_V2_BIG * ((LCP_MAX + 1) / 8) * sizeof(char));
@@ -236,10 +241,16 @@ int lzsa_compressor_shrink_block(lzsa_compressor *pCompressor, unsigned char *pI
       if (nPreviousBlockSize) {
          lzsa_skip_matches(pCompressor, 0, nPreviousBlockSize);
       }
-      lzsa_find_all_matches(pCompressor, (pCompressor->format_version == 2) ? NMATCHES_PER_INDEX_V2 : NMATCHES_PER_INDEX_V1, nPreviousBlockSize, nPreviousBlockSize + nInDataSize);
+      lzsa_find_all_matches(pCompressor, (pCompressor->format_version == 2) ? NMATCHES_PER_INDEX_V2 : (pCompressor->format_version == 3) ? NMATCHES_PER_INDEX_V1A : NMATCHES_PER_INDEX_V1, nPreviousBlockSize, nPreviousBlockSize + nInDataSize);
 
       if (pCompressor->format_version == 1) {
          nCompressedSize = lzsa_optimize_and_write_block_v1(pCompressor, pInWindow, nPreviousBlockSize, nInDataSize, pOutData, nMaxOutDataSize);
+         if (nCompressedSize != -1 && (pCompressor->flags & LZSA_FLAG_RAW_BACKWARD)) {
+            lzsa_reverse_buffer(pOutData, nCompressedSize);
+         }
+      }
+      else if (pCompressor->format_version == 3) {
+         nCompressedSize = lzsa_optimize_and_write_block_v1a(pCompressor, pInWindow, nPreviousBlockSize, nInDataSize, pOutData, nMaxOutDataSize);
          if (nCompressedSize != -1 && (pCompressor->flags & LZSA_FLAG_RAW_BACKWARD)) {
             lzsa_reverse_buffer(pOutData, nCompressedSize);
          }
