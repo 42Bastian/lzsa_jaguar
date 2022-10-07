@@ -147,7 +147,7 @@ static inline int lzsa_write_match_varlen_v1(unsigned char *pOutData, int nOutOf
  *
  * @return cost in bits
  */
-#define lzsa_get_offset_cost_v1(__nMatchOffset) (((__nMatchOffset) <= 256) ? 8 : 16)
+#define lzsa_get_offset_cost_v1(__nMatchOffset) ( positiveOffset == 0 ) ? (((__nMatchOffset) <= 256) ? 8 : 16) : (((__nMatchOffset) <= 255) ? 8 : 16)
 
 /**
  * Attempt to pick optimal matches using a forward arrivals parser, so as to produce the smallest possible output that decompresses to the same input
@@ -433,7 +433,7 @@ static int lzsa_get_compressed_size_v1(lzsa_compressor *pCompressor, lzsa_match 
          const int nMatchOffset = pMatch->offset;
          const int nMatchLen = pMatch->length;
          const int nEncodedMatchLen = nMatchLen - MIN_MATCH_SIZE_V1;
-         const int nTokenLongOffset = (nMatchOffset <= 256) ? 0x00 : 0x80;
+         const int nTokenLongOffset = ( positiveOffset == 0 ) ? ((nMatchOffset <= 256) ? 0x00 : 0x80) : ((nMatchOffset <= 256) ? 0x00 : 0x80);
          const int nCommandSize = 8 /* token */ + lzsa_get_literals_varlen_size_v1(nNumLiterals) + (nNumLiterals << 3) + (nTokenLongOffset ? 16 : 8) /* match offset */ + lzsa_get_match_varlen_size_v1(nEncodedMatchLen);
 
          nCompressedSize += nCommandSize;
@@ -488,7 +488,7 @@ static int lzsa_write_block_v1(lzsa_compressor *pCompressor, lzsa_match *pBestMa
          const int nEncodedMatchLen = nMatchLen - MIN_MATCH_SIZE_V1;
          const int nTokenLiteralsLen = (nNumLiterals >= LITERALS_RUN_LEN_V1) ? LITERALS_RUN_LEN_V1 : nNumLiterals;
          const int nTokenMatchLen = (nEncodedMatchLen >= MATCH_RUN_LEN_V1) ? MATCH_RUN_LEN_V1 : nEncodedMatchLen;
-         const int nTokenLongOffset = (nMatchOffset <= 256) ? 0x00 : 0x80;
+         const int nTokenLongOffset =  ( positiveOffset == 0 ) ? ((nMatchOffset <= 256) ? 0x00 : 0x80) : ((nMatchOffset <= 256) ? 0x00 : 0x80);
          const int nCommandSize = 8 /* token */ + lzsa_get_literals_varlen_size_v1(nNumLiterals) + (nNumLiterals << 3) + (nTokenLongOffset ? 16 : 8) /* match offset */ + lzsa_get_match_varlen_size_v1(nEncodedMatchLen);
 
          if ((nOutOffset + (nCommandSize >> 3)) > nMaxOutDataSize)

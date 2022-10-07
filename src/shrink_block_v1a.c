@@ -147,7 +147,7 @@ static inline int lzsa_write_match_varlen_v1a(unsigned char *pOutData, int nOutO
  *
  * @return cost in bits
  */
-#define lzsa_get_offset_cost_v1a(__nMatchOffset) (((__nMatchOffset) <= 256) ? 8 : 16)
+#define lzsa_get_offset_cost_v1a(__nMatchOffset) (((__nMatchOffset) <= 255) ? 8 : 16)
 
 /**
  * Attempt to pick optimal matches using a forward arrivals parser, so as to produce the smallest possible output that decompresses to the same input
@@ -433,7 +433,7 @@ static int lzsa_get_compressed_size_v1a(lzsa_compressor *pCompressor, lzsa_match
          const int nMatchOffset = pMatch->offset;
          const int nMatchLen = pMatch->length;
          const int nEncodedMatchLen = nMatchLen - MIN_MATCH_SIZE_V1A;
-         const int nTokenLongOffset = (nMatchOffset <= 256) ? 0x00 : 0x80;
+         const int nTokenLongOffset = (nMatchOffset <= 255) ? 0x00 : 0x80;
          const int nCommandSize = 8 /* token */ + lzsa_get_literals_varlen_size_v1a(nNumLiterals) + (nNumLiterals << 3) + (nTokenLongOffset ? 16 : 8) /* match offset */ + lzsa_get_match_varlen_size_v1a(nEncodedMatchLen);
 
          nCompressedSize += nCommandSize;
@@ -488,7 +488,7 @@ static int lzsa_write_block_v1a(lzsa_compressor *pCompressor, lzsa_match *pBestM
          const int nEncodedMatchLen = nMatchLen - MIN_MATCH_SIZE_V1A;
          const int nTokenLiteralsLen = (nNumLiterals >= LITERALS_RUN_LEN_V1A) ? LITERALS_RUN_LEN_V1A : nNumLiterals;
          const int nTokenMatchLen = (nEncodedMatchLen >= MATCH_RUN_LEN_V1A) ? MATCH_RUN_LEN_V1A : nEncodedMatchLen;
-         const int nTokenLongOffset = (nMatchOffset <= 256) ? 0x00 : 0x80;
+         const int nTokenLongOffset = (nMatchOffset <= 255) ? 0x00 : 0x80;
          const int nCommandSize = 8 /* token */ + lzsa_get_literals_varlen_size_v1a(nNumLiterals) + (nNumLiterals << 3) + (nTokenLongOffset ? 16 : 8) /* match offset */ + lzsa_get_match_varlen_size_v1a(nEncodedMatchLen);
 
          if ((nOutOffset + (nCommandSize >> 3)) > nMaxOutDataSize)
@@ -511,16 +511,10 @@ static int lzsa_write_block_v1a(lzsa_compressor *pCompressor, lzsa_match *pBestM
             nOutOffset += nNumLiterals;
             nNumLiterals = 0;
          }
-         if ( positiveOffset != 0 ){
-           pOutData[nOutOffset++] = nMatchOffset & 0xff;
-           if (nTokenLongOffset) {
-             pOutData[nOutOffset++] = nMatchOffset >> 8;
-           }
-         } else {
-           pOutData[nOutOffset++] = (-nMatchOffset) & 0xff;
-           if (nTokenLongOffset) {
-             pOutData[nOutOffset++] = (-nMatchOffset) >> 8;
-           }
+
+         pOutData[nOutOffset++] = nMatchOffset & 0xff;
+         if (nTokenLongOffset) {
+           pOutData[nOutOffset++] = nMatchOffset >> 8;
          }
          nOutOffset = lzsa_write_match_varlen_v1a(pOutData, nOutOffset, nEncodedMatchLen);
 

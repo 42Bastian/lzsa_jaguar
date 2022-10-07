@@ -125,9 +125,11 @@ int lzsa_decompressor_expand_block_v1(const unsigned char *pInBlock, int nBlockS
    unsigned char *pCurOutData = pOutData + nOutDataOffset;
    const unsigned char *pOutDataEnd = pCurOutData + nBlockMaxSize;
    const unsigned char *pOutDataFastEnd = pOutDataEnd - 18;
-
+   const unsigned char *p = pInBlock;
    while (pInBlock < pInBlockEnd) {
       const unsigned char token = *pInBlock++;
+
+      printf("\n%03x:%02x ",pInBlock-p+5,token);
       unsigned int nLiterals = (unsigned int)((token & 0x70) >> 4);
 
       if (nLiterals != LITERALS_RUN_LEN_V1 && (pInBlock + 8) <= pInBlockEnd && pCurOutData < pOutDataFastEnd) {
@@ -162,7 +164,7 @@ int lzsa_decompressor_expand_block_v1(const unsigned char *pInBlock, int nBlockS
             nMatchOffset |= (((unsigned int)(*pInBlock++)) << 8) ^ 0xff00;
          }
          nMatchOffset++;
-
+         printf("(%d)",nMatchOffset);
          const unsigned char *pSrc = pCurOutData - nMatchOffset;
          if (pSrc >= pOutData) {
             unsigned int nMatchLen = (unsigned int)(token & 0x0f);
