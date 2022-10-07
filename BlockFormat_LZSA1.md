@@ -1,3 +1,5 @@
+_Note: Modified from original version!_
+
 # Block data format (LZSA1)
 
 Blocks encoded as LZSA1 are composed from consecutive commands. Each command follows this format:
@@ -44,9 +46,11 @@ The low 8 bits of the match offset follows.
 
 If the 'O' bit (bit 7) is set in the token, the high 8 bits of the match offset follow, otherwise they are understood to be all set to 1. For instance, a short offset of 0x70 is interpreted as 0xff70.
 
-**important note regarding match offsets: stored as negative values**
+**important note regarding match offsets: stored as negative values if the option `-p` is not set**
 
 Note that the match offset is negative: it is added to the current decompressed location and not substracted, in order to locate the back-reference to copy.
+
+**important note regarding match offsets: stored as positive values if the option `-p` is set**
 
 **optional extra encoded match length**
 
