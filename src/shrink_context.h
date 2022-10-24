@@ -124,10 +124,9 @@ typedef struct _lzsa_compressor {
    unsigned int *open_intervals;
    lzsa_match *match;
    lzsa_match *best_match;
-   lzsa_match *improved_match;
    lzsa_arrival *arrival;
-   char *rep_slot_handled_mask;
-   char *rep_len_handled_mask;
+   unsigned char *rep_slot_handled_mask;
+   unsigned char *rep_len_handled_mask;
    int *first_offset_for_byte;
    int *next_offset_for_pos;
    int *offset_cache;
@@ -145,6 +144,7 @@ typedef struct _lzsa_compressor {
  * @param pCompressor compression context to initialize
  * @param nMaxWindowSize maximum size of input data window (previously compressed bytes + bytes to compress)
  * @param nMinMatchSize minimum match size (cannot be less than MIN_MATCH_SIZE)
+ * @param nFormatVersion version of format to use (1-2)
  * @param nFlags compression flags
  *
  * @return 0 for success, non-zero for failure
