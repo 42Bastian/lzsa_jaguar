@@ -1,4 +1,4 @@
-CC=clang
+CC=gcc
 CFLAGS=-O3 -g -fomit-frame-pointer -Isrc/libdivsufsort/include -Isrc
 OBJDIR=obj
 LDFLAGS=
@@ -36,4 +36,3 @@ $(APP): $(OBJS)
 
 clean:
 	@rm -rf $(APP) $(OBJDIR)
-
